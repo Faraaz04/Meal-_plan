@@ -45,7 +45,12 @@
             const url = 'Parents Meal Plan.xlsx'; // The path to your Excel file
 
             fetch(url)
-                .then(response => response.arrayBuffer())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.arrayBuffer();
+                })
                 .then(buffer => {
                     const workbook = XLSX.read(buffer, { type: 'array' });
                     const firstSheetName = workbook.SheetNames[0];
@@ -58,39 +63,35 @@
                 });
         }
 
-        // Search ingredients using Fuse.js
+        // Search ingredients using simple matching
         function searchIngredients(ingredients) {
             if (data.length === 0) {
                 console.error('Data is not loaded yet');
                 return;
             }
 
-            const options = {
-                includeScore: true,
-                keys: ['Ingredients'] // Adjust based on your Excel sheet's column names
-            };
-
-            const fuse = new Fuse(data, options);
-            const result = fuse.search({
-                $and: ingredients.map(ingredient => ({ Ingredients: ingredient }))
+            // Simple search: check if all ingredients are present in any recipe's ingredient list
+            const results = data.filter(row => {
+                const rowIngredients = row.Ingredients.split(',').map(ing => ing.trim().toLowerCase());
+                return ingredients.every(ingredient => rowIngredients.includes(ingredient.toLowerCase()));
             });
 
-            console.log('Search results:', result); // Debugging log
-            displayResults(result);
+            console.log('Search results:', results); // Debugging log
+            displayResults(results);
         }
 
         // Display the search results
-        function displayResults(result) {
+        function displayResults(results) {
             const resultsDiv = document.getElementById('results');
             resultsDiv.innerHTML = '';
 
-            if (result.length === 0) {
+            if (results.length === 0) {
                 resultsDiv.innerHTML = '<p>No recipes found.</p>';
             } else {
                 const ul = document.createElement('ul');
-                result.forEach(({ item }) => {
+                results.forEach(item => {
                     const li = document.createElement('li');
-                    li.textContent = JSON.stringify(item);
+                    li.textContent = `Recipe Name: ${item['Recipe Name']}, Ingredients: ${item.Ingredients}, Description: ${item.Description}`;
                     ul.appendChild(li);
                 });
                 resultsDiv.appendChild(ul);
