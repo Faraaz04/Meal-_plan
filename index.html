@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ingredient Search</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.5.3/fuse.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #results {
+            margin-top: 20px;
+        }
+        ul {
+            list-style-type: none;
+        }
+        li {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Search for Recipes by Ingredients</h1>
+    <form id="ingredient-form">
+        <label for="ingredients">Enter ingredients (comma-separated):</label>
+        <input type="text" id="ingredients" name="ingredients">
+        <button type="submit">Search</button>
+    </form>
+    <div id="results"></div>
+
+    <script>
+        document.getElementById('ingredient-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const ingredients = document.getElementById('ingredients').value.split(',').map(ing => ing.trim());
+            searchIngredients(ingredients);
+        });
+
+        let data = [];
+
+        // Load the Excel file
+        function loadExcelFile() {
+            const url = 'path/to/ingredients.xlsx'; // Change to the path of your Excel file
+
+            fetch(url)
+                .then(response => response.arrayBuffer())
+                .then(buffer => {
+                    const workbook = XLSX.read(buffer, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    data = XLSX.utils.sheet_to_json(worksheet);
+                });
+        }
+
+        // Search ingredients using Fuse.js
+        function searchIngredients(ingredients) {
+            const options = {
+                includeScore: true,
+                keys: ['Ingredients'] // Adjust based on your Excel sheet's column names
+            };
+
+            const fuse = new Fuse(data, options);
+            const result = fuse.search({
+                $and: ingredients.map(ingredient => ({ Ingredients: ingredient }))
+            });
+
+            displayResults(result);
+        }
+
+        // Display the search results
+        function displayResults(result) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+
+            if (result.length === 0) {
+                resultsDiv.innerHTML = '<p>No recipes found.</p>';
+            } else {
+                const ul = document.createElement('ul');
+                result.forEach(({ item }) => {
+                    const li = document.createElement('li');
+                    li.textContent = JSON.stringify(item);
+                    ul.appendChild(li);
+                });
+                resultsDiv.appendChild(ul);
+            }
+        }
+
+        loadExcelFile();
+    </script>
+</body>
+</html>
