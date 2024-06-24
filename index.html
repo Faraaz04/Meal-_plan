@@ -28,6 +28,7 @@
         <input type="text" id="ingredients" name="ingredients">
         <button type="submit">Search</button>
     </form>
+    <div id="searched-ingredients"></div>
     <div id="results"></div>
 
     <script>
@@ -35,8 +36,13 @@
             e.preventDefault();
             const ingredients = document.getElementById('ingredients').value.split(',').map(ing => ing.trim());
             console.log('Ingredients:', ingredients); // Debugging log
-            searchIngredients(ingredients);
+            displaySearchedIngredients(ingredients);
         });
+
+        function displaySearchedIngredients(ingredients) {
+            const ingredientsDiv = document.getElementById('searched-ingredients');
+            ingredientsDiv.innerHTML = `<p>Searched Ingredients: ${ingredients.join(', ')}</p>`;
+        }
 
         let data = [];
 
@@ -61,46 +67,6 @@
                 .catch(error => {
                     console.error('Error loading Excel file:', error);
                 });
-        }
-
-        // Search ingredients using Fuse.js for fuzzy searching
-        function searchIngredients(ingredients) {
-            if (data.length === 0) {
-                console.error('Data is not loaded yet');
-                return;
-            }
-
-            // Configure Fuse.js options for case-insensitive search and partial matches
-            const options = {
-                includeScore: true,
-                ignoreLocation: true,
-                keys: ['**Ingredients**'] // Adjust based on your Excel sheet's column names
-            };
-
-            const fuse = new Fuse(data, options);
-            const searchString = ingredients.join(' ').toLowerCase();
-            const result = fuse.search(searchString);
-
-            console.log('Search results:', result); // Debugging log
-            displayResults(result);
-        }
-
-        // Display the search results
-        function displayResults(result) {
-            const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = '';
-
-            if (result.length === 0) {
-                resultsDiv.innerHTML = '<p>No recipes found.</p>';
-            } else {
-                const ul = document.createElement('ul');
-                result.forEach(({ item, score }) => {
-                    const li = document.createElement('li');
-                    li.textContent = `Recipe Name: ${item['Recipe Name']}, Ingredients: ${item['**Ingredients**']}, Description: ${item.Description}, Score: ${score.toFixed(2)}`;
-                    ul.appendChild(li);
-                });
-                resultsDiv.appendChild(ul);
-            }
         }
 
         loadExcelFile();
