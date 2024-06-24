@@ -69,7 +69,7 @@
 
                 // Search functionality
                 searchInput.addEventListener('input', function() {
-                    var searchTerm = this.value.toLowerCase();
+                    var searchTerm = this.value.trim().toLowerCase();
                     var filteredData = [];
                     filteredData.push(sheet_data[0]); // Include headers
                     for(var i = 1; i < sheet_data.length; i++) {
