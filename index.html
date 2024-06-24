@@ -63,35 +63,40 @@
                 });
         }
 
-        // Search ingredients using simple matching
+        // Search ingredients using Fuse.js for fuzzy searching
         function searchIngredients(ingredients) {
             if (data.length === 0) {
                 console.error('Data is not loaded yet');
                 return;
             }
 
-            // Simple search: check if all ingredients are present in any recipe's ingredient list
-            const results = data.filter(row => {
-                const rowIngredients = row.Ingredients.split(',').map(ing => ing.trim().toLowerCase());
-                return ingredients.every(ingredient => rowIngredients.includes(ingredient.toLowerCase()));
-            });
+            // Configure Fuse.js options for case-insensitive search and partial matches
+            const options = {
+                includeScore: true,
+                ignoreLocation: true,
+                keys: ['**Ingredients**'] // Adjust based on your Excel sheet's column names
+            };
 
-            console.log('Search results:', results); // Debugging log
-            displayResults(results);
+            const fuse = new Fuse(data, options);
+            const searchString = ingredients.join(' ').toLowerCase();
+            const result = fuse.search(searchString);
+
+            console.log('Search results:', result); // Debugging log
+            displayResults(result);
         }
 
         // Display the search results
-        function displayResults(results) {
+        function displayResults(result) {
             const resultsDiv = document.getElementById('results');
             resultsDiv.innerHTML = '';
 
-            if (results.length === 0) {
+            if (result.length === 0) {
                 resultsDiv.innerHTML = '<p>No recipes found.</p>';
             } else {
                 const ul = document.createElement('ul');
-                results.forEach(item => {
+                result.forEach(({ item, score }) => {
                     const li = document.createElement('li');
-                    li.textContent = `Recipe Name: ${item['Recipe Name']}, Ingredients: ${item.Ingredients}, Description: ${item.Description}`;
+                    li.textContent = `Recipe Name: ${item['Recipe Name']}, Ingredients: ${item['**Ingredients**']}, Description: ${item.Description}, Score: ${score.toFixed(2)}`;
                     ul.appendChild(li);
                 });
                 resultsDiv.appendChild(ul);
