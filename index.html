@@ -74,7 +74,7 @@
                     filteredData.push(sheet_data[0]); // Include headers
                     for(var i = 1; i < sheet_data.length; i++) {
                         var rowData = sheet_data[i];
-                        var ingredients = rowData[0].toLowerCase(); // Assuming Ingredients column is the first column
+                        var ingredients = rowData[1].toLowerCase(); // Ingredients column is the second column (index 1)
                         if(ingredients.includes(searchTerm)) {
                             filteredData.push(rowData);
                         }
