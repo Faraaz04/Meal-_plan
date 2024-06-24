@@ -34,6 +34,7 @@
         document.getElementById('ingredient-form').addEventListener('submit', function(e) {
             e.preventDefault();
             const ingredients = document.getElementById('ingredients').value.split(',').map(ing => ing.trim());
+            console.log('Ingredients:', ingredients); // Debugging log
             searchIngredients(ingredients);
         });
 
@@ -50,11 +51,20 @@
                     const firstSheetName = workbook.SheetNames[0];
                     const worksheet = workbook.Sheets[firstSheetName];
                     data = XLSX.utils.sheet_to_json(worksheet);
+                    console.log('Data loaded from Excel:', data); // Debugging log
+                })
+                .catch(error => {
+                    console.error('Error loading Excel file:', error);
                 });
         }
 
         // Search ingredients using Fuse.js
         function searchIngredients(ingredients) {
+            if (data.length === 0) {
+                console.error('Data is not loaded yet');
+                return;
+            }
+
             const options = {
                 includeScore: true,
                 keys: ['Ingredients'] // Adjust based on your Excel sheet's column names
@@ -65,6 +75,7 @@
                 $and: ingredients.map(ingredient => ({ Ingredients: ingredient }))
             });
 
+            console.log('Search results:', result); // Debugging log
             displayResults(result);
         }
 
